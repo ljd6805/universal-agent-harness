@@ -4,6 +4,34 @@ Universal Agent Harness is a shared baseline for managing AI coding agents acros
 
 It keeps durable rules and automation in one common harness, then exposes tool-specific entry points through links and adapter config.
 
+## What This Repository Is For
+
+This repository is not an application project. It is a reusable operating layer for AI coding agents.
+
+The goal is to make agent behavior:
+
+- consistent across tools
+- easy to inspect
+- easy to strengthen over time
+- safe to copy into other repositories
+- testable as the harness grows
+
+## Study Guide
+
+If you want to understand the harness deeply before extending it, start here:
+
+- [docs/HARNESS_GUIDE.ko.md](docs/HARNESS_GUIDE.ko.md)
+
+That guide explains:
+
+- what an agent harness is
+- why this repository is structured this way
+- what each file does
+- which settings apply to Codex, Claude, and Gemini
+- how the hooks work
+- what is currently enforced versus only documented
+- how to strengthen the harness safely
+
 ## Repository Layout
 
 ```text
@@ -25,6 +53,18 @@ It keeps durable rules and automation in one common harness, then exposes tool-s
     └── rules/
         └── AGENT_GUIDE.md
 ```
+
+## Design Principle
+
+The root-level files are tool-facing entry points. They should stay small and stable.
+
+The real source of truth lives under `.agent-harness/`:
+
+- `.agent-harness/rules/` contains shared agent behavior rules.
+- `.agent-harness/hooks/` contains shared automation scripts.
+- `.agent-harness/adapters/` contains tool-specific configuration.
+
+This prevents Codex, Claude, and Gemini instructions from drifting apart.
 
 ## Agent Entry Points
 
@@ -53,6 +93,22 @@ That adapter runs shared hook scripts after file edits:
 3. `tdd_guard.py` warns when production code has no matching test file.
 
 Codex and Gemini adapters are documented placeholders for now. Their shared operating rules are already active through `AGENTS.md` and `GEMINI.md`; tool-native hooks can be added under `.agent-harness/adapters/` as those tools expose stable project config.
+
+## Validation
+
+Run the harness self-tests with:
+
+```bash
+python3 -m unittest discover -s tests
+```
+
+Current tests verify:
+
+- agent entry-point symlinks
+- Claude settings symlink
+- Claude adapter JSON validity
+- TDD guard warning behavior
+- TDD guard skip behavior when a matching test exists
 
 ## Strengthening Roadmap
 
