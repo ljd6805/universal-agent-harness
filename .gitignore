@@ -1,0 +1,15 @@
+.claude/settings.local.json
+.claude/logs/
+.agent-harness/logs/
+
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+coverage/
+dist/
+build/
+
+.DS_Store
