@@ -1,86 +1,86 @@
-# Universal Agent Instructions
+# 범용 에이전트 작업 지침
 
-This file is the shared working guide for Codex, Claude, Gemini, and other coding agents in this repository.
+이 파일은 이 저장소에서 Codex, Claude, Gemini와 다른 코딩 에이전트가 공통으로 따라야 하는 작업 지침입니다.
 
-## Purpose
+## 목적
 
-This repository uses a universal harness so agent behavior can be managed, audited, and strengthened over time without duplicating rules across tools.
+이 저장소는 도구별로 규칙을 중복 작성하지 않고, 에이전트의 행동을 관리하고 검토하며 점진적으로 강화하기 위해 범용 하네스를 사용합니다.
 
-Tool-specific entry points should point here:
+도구별 진입점은 이 파일을 가리켜야 합니다.
 
-- `AGENTS.md` for Codex
-- `CLAUDE.md` for Claude Code
-- `GEMINI.md` for Gemini
+- Codex: `AGENTS.md`
+- Claude Code: `CLAUDE.md`
+- Gemini: `GEMINI.md`
 
-## Core Workflow
+## 핵심 작업 흐름
 
-### 1. Inspect Before Editing
+### 1. 수정 전 먼저 탐색한다
 
-Before changing files:
+파일을 수정하기 전에 다음을 수행합니다.
 
-- Read the relevant files first.
-- Check the repository status when git is available.
-- Identify whether existing user changes are present.
-- Preserve unrelated user changes.
+- 관련 파일을 먼저 읽습니다.
+- git을 사용할 수 있으면 저장소 상태를 확인합니다.
+- 기존 사용자 변경이 있는지 확인합니다.
+- 현재 작업과 무관한 사용자 변경은 보존합니다.
 
-### 2. Use TDD By Default
+### 2. 기본값은 TDD다
 
-Production code should be driven by a failing test first.
+프로덕션 코드는 실패하는 테스트를 먼저 작성한 뒤 구현하는 것을 기본값으로 삼습니다.
 
 ```text
-write failing test -> confirm failure -> minimal implementation -> confirm pass -> refactor
+실패하는 테스트 작성 -> 실패 확인 -> 최소 구현 -> 통과 확인 -> 리팩터
 ```
 
-Acceptable exceptions:
+허용되는 예외는 다음과 같습니다.
 
-- Documentation-only changes
-- Configuration-only harness changes
-- Exploratory scaffolding explicitly requested by the user
-- User-approved exceptions
+- 문서만 수정하는 경우
+- 하네스 설정만 수정하는 경우
+- 사용자가 명시적으로 요청한 탐색적 스캐폴딩
+- 사용자가 승인한 예외
 
-Test naming conventions:
+테스트 파일 이름 규칙은 다음과 같습니다.
 
-- Python: `test_<name>.py` or `<name>_test.py`
-- TypeScript or JavaScript: `<name>.test.ts`, `<name>.spec.ts`, `<name>.test.js`, or `<name>.spec.js`
+- Python: `test_<name>.py` 또는 `<name>_test.py`
+- TypeScript 또는 JavaScript: `<name>.test.ts`, `<name>.spec.ts`, `<name>.test.js`, `<name>.spec.js`
 
-### 3. Consider Parallelization
+### 3. 병렬화 가능성을 판단한다
 
-At task start, decide whether work can be split safely.
+작업을 시작할 때 일을 안전하게 나눌 수 있는지 판단합니다.
 
-Parallelize only when:
+다음 경우에만 병렬화를 고려합니다.
 
-- Different files or modules can be changed independently.
-- Failures have separate causes.
-- Research, implementation, and verification can proceed without shared mutable state.
+- 서로 다른 파일이나 모듈을 독립적으로 수정할 수 있습니다.
+- 실패 원인이 서로 다릅니다.
+- 조사, 구현, 검증이 공유 상태 없이 진행될 수 있습니다.
 
-Stay single-threaded when:
+다음 경우에는 단일 흐름으로 진행합니다.
 
-- Failures are related.
-- Debugging requires a whole-system view.
-- Multiple edits target the same file or tightly coupled behavior.
+- 실패가 서로 연관되어 있습니다.
+- 전체 시스템을 함께 봐야 디버깅할 수 있습니다.
+- 여러 수정이 같은 파일이나 강하게 결합된 동작을 대상으로 합니다.
 
-### 4. Verify Before Completion
+### 4. 완료 전 검증한다
 
-Before reporting completion:
+완료를 보고하기 전에 다음을 수행합니다.
 
-- Run the most relevant tests or checks available.
-- If no tests exist, perform a concrete manual or script-level check.
-- If verification cannot run, state the blocker and the command that should be run next.
+- 가능한 가장 관련 있는 테스트나 검사를 실행합니다.
+- 테스트가 없다면 구체적인 수동 확인이나 스크립트 수준 확인을 수행합니다.
+- 검증을 실행할 수 없다면 이유와 다음에 실행해야 할 명령을 명시합니다.
 
-### 5. Keep The Harness Maintainable
+### 5. 하네스를 유지보수하기 쉽게 둔다
 
-- Keep shared rules in `.agent-harness/rules/`.
-- Keep shared automation in `.agent-harness/hooks/`.
-- Keep tool-specific config in `.agent-harness/adapters/<tool>/`.
-- Keep root-level agent files as pointers to the shared guide.
-- Prefer small, auditable scripts over large inline shell commands.
+- 공통 규칙은 `.agent-harness/rules/`에 둡니다.
+- 공통 자동화는 `.agent-harness/hooks/`에 둡니다.
+- 도구별 설정은 `.agent-harness/adapters/<tool>/`에 둡니다.
+- 루트의 에이전트 파일은 공통 가이드를 가리키는 진입점으로 유지합니다.
+- 긴 인라인 셸 명령보다 작고 검토 가능한 스크립트를 선호합니다.
 
-## Current Shared Hooks
+## 현재 공통 훅
 
-The shared hook scripts are:
+현재 공통 훅 스크립트는 다음과 같습니다.
 
 - `.agent-harness/hooks/format_changed_file.py`
 - `.agent-harness/hooks/run_tests.py`
 - `.agent-harness/hooks/tdd_guard.py`
 
-Adapters may call these scripts when the tool supports project hooks.
+각 도구가 프로젝트 훅을 지원하면 어댑터에서 이 스크립트들을 호출할 수 있습니다.

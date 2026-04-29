@@ -1,38 +1,36 @@
-# Universal Agent Harness
+# 범용 에이전트 하네스
 
-Universal Agent Harness is a shared baseline for managing AI coding agents across Codex, Claude, and Gemini.
+이 저장소는 Codex, Claude, Gemini 같은 AI 코딩 에이전트를 공통 규칙으로 관리하기 위한 범용 하네스입니다.
 
-It keeps durable rules and automation in one common harness, then exposes tool-specific entry points through links and adapter config.
+애플리케이션 코드가 아니라, 에이전트가 프로젝트 안에서 어떻게 탐색하고, 수정하고, 검증하고, 보고해야 하는지를 정리하는 운영 기반입니다.
 
-## What This Repository Is For
+## 이 저장소의 목적
 
-This repository is not an application project. It is a reusable operating layer for AI coding agents.
+이 하네스의 목표는 에이전트 작업을 다음 상태로 만드는 것입니다.
 
-The goal is to make agent behavior:
+- 여러 도구에서 일관되게 동작한다.
+- 현재 설정과 규칙을 쉽게 확인할 수 있다.
+- 시간이 지나며 안전하게 강화할 수 있다.
+- 다른 저장소에 복사하거나 이식하기 쉽다.
+- 하네스 자체도 테스트로 검증할 수 있다.
 
-- consistent across tools
-- easy to inspect
-- easy to strengthen over time
-- safe to copy into other repositories
-- testable as the harness grows
+## 먼저 읽을 문서
 
-## Study Guide
+하네스를 제대로 이해하고 강화 방향을 고민하려면 아래 문서부터 읽는 것을 권장합니다.
 
-If you want to understand the harness deeply before extending it, start here:
+- [범용 에이전트 하네스 상세 가이드](docs/HARNESS_GUIDE.ko.md)
 
-- [docs/HARNESS_GUIDE.ko.md](docs/HARNESS_GUIDE.ko.md)
+상세 가이드에서는 다음 내용을 설명합니다.
 
-That guide explains:
+- 하네스가 무엇인지
+- 왜 현재 구조를 선택했는지
+- 각 파일과 디렉터리가 어떤 역할을 하는지
+- Codex, Claude, Gemini에 각각 어떤 범위까지 적용되는지
+- 훅 스크립트가 어떻게 동작하는지
+- 현재 자동으로 강제되는 것과 문서로만 안내되는 것이 무엇인지
+- 앞으로 어떤 순서로 강화하면 좋은지
 
-- what an agent harness is
-- why this repository is structured this way
-- what each file does
-- which settings apply to Codex, Claude, and Gemini
-- how the hooks work
-- what is currently enforced versus only documented
-- how to strengthen the harness safely
-
-## Repository Layout
+## 저장소 구조
 
 ```text
 .
@@ -54,75 +52,75 @@ That guide explains:
         └── AGENT_GUIDE.md
 ```
 
-## Design Principle
+## 설계 원칙
 
-The root-level files are tool-facing entry points. They should stay small and stable.
+루트의 `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`는 각 도구가 읽는 진입점입니다. 이 파일들은 작고 안정적으로 유지하고, 실제 규칙은 `.agent-harness/` 아래에 둡니다.
 
-The real source of truth lives under `.agent-harness/`:
+실제 원본은 다음 위치에 있습니다.
 
-- `.agent-harness/rules/` contains shared agent behavior rules.
-- `.agent-harness/hooks/` contains shared automation scripts.
-- `.agent-harness/adapters/` contains tool-specific configuration.
+- `.agent-harness/rules/`: 모든 에이전트가 공유하는 작업 규칙
+- `.agent-harness/hooks/`: 포맷, 테스트, TDD 확인 같은 공통 자동화 스크립트
+- `.agent-harness/adapters/`: 도구별 설정
 
-This prevents Codex, Claude, and Gemini instructions from drifting apart.
+이 구조를 쓰면 Codex, Claude, Gemini의 지침이 서로 다르게 갈라지는 일을 줄일 수 있습니다.
 
-## Agent Entry Points
+## 에이전트 진입점
 
-- Codex reads `AGENTS.md`.
-- Claude Code reads `CLAUDE.md`.
-- Gemini tooling commonly reads `GEMINI.md`.
+- Codex는 `AGENTS.md`를 읽습니다.
+- Claude Code는 `CLAUDE.md`를 읽습니다.
+- Gemini 계열 도구는 일반적으로 `GEMINI.md`를 읽습니다.
 
-All three point at the same guide, so policy changes happen in one place:
+세 파일은 모두 같은 공통 가이드를 가리킵니다.
 
 ```text
 .agent-harness/rules/AGENT_GUIDE.md
 ```
 
-## Current Automation
+## 현재 자동화
 
-Claude Code currently has the strongest native hook support, so `.claude/settings.json` links to the Claude adapter:
+현재 가장 강하게 연결된 도구는 Claude Code입니다. Claude Code는 `.claude/settings.json`을 읽고, 이 파일은 Claude 어댑터 설정을 가리킵니다.
 
 ```text
 .agent-harness/adapters/claude/settings.json
 ```
 
-That adapter runs shared hook scripts after file edits:
+Claude 어댑터는 파일 수정 이후 다음 공통 훅 스크립트를 실행합니다.
 
-1. `format_changed_file.py` formats changed files when Prettier or Black is available.
-2. `run_tests.py` runs the detected test command.
-3. `tdd_guard.py` warns when production code has no matching test file.
+1. `format_changed_file.py`: Prettier 또는 Black이 있으면 변경 파일을 포맷합니다.
+2. `run_tests.py`: 감지 가능한 테스트 명령을 실행합니다.
+3. `tdd_guard.py`: 프로덕션 코드에 대응 테스트가 없으면 경고합니다.
 
-Codex and Gemini adapters are documented placeholders for now. Their shared operating rules are already active through `AGENTS.md` and `GEMINI.md`; tool-native hooks can be added under `.agent-harness/adapters/` as those tools expose stable project config.
+Codex와 Gemini 어댑터는 현재 문서화된 기본 자리만 마련되어 있습니다. 공통 규칙은 이미 `AGENTS.md`와 `GEMINI.md`를 통해 적용되며, 각 도구가 안정적인 프로젝트 훅이나 설정 방식을 제공할 때 `.agent-harness/adapters/` 아래에 추가하면 됩니다.
 
-## Validation
+## 검증 방법
 
-Run the harness self-tests with:
+하네스 자체 테스트는 다음 명령으로 실행합니다.
 
 ```bash
 python3 -m unittest discover -s tests
 ```
 
-Current tests verify:
+현재 테스트는 다음을 확인합니다.
 
-- agent entry-point symlinks
-- Claude settings symlink
-- Claude adapter JSON validity
-- TDD guard warning behavior
-- TDD guard skip behavior when a matching test exists
+- 에이전트 진입점 symlink
+- Claude 설정 symlink
+- Claude 어댑터 JSON 유효성
+- TDD 가드 경고 동작
+- 대응 테스트가 있을 때 TDD 가드가 경고하지 않는 동작
 
-## Strengthening Roadmap
+## 강화 로드맵
 
-Use this order when evolving the harness:
+이 하네스를 발전시킬 때는 다음 순서를 권장합니다.
 
-1. Add language-specific test and lint adapters.
-2. Add tool-native config for Codex and Gemini when stable project hooks are available.
-3. Add harness self-tests for hook scripts.
-4. Add security checks for dangerous commands and secret leakage.
-5. Add project templates for Python, Node, Go, Rust, and mixed repositories.
+1. 언어별 테스트와 린트 어댑터를 추가합니다.
+2. Codex와 Gemini의 안정적인 도구별 설정 방식이 확인되면 어댑터에 반영합니다.
+3. 훅 스크립트에 대한 하네스 자체 테스트를 늘립니다.
+4. 위험 명령과 시크릿 유출을 막는 보안 검사를 추가합니다.
+5. Python, Node, Go, Rust, 혼합 저장소용 템플릿을 추가합니다.
 
-## Applying To Another Project
+## 다른 프로젝트에 적용하기
 
-Copy the harness directory and create the agent entry-point links:
+하네스 디렉터리를 복사하고, 각 에이전트 진입점 링크를 만듭니다.
 
 ```bash
 cp -r .agent-harness /path/to/project/
@@ -133,4 +131,4 @@ mkdir -p /path/to/project/.claude
 ln -s ../.agent-harness/adapters/claude/settings.json /path/to/project/.claude/settings.json
 ```
 
-If a filesystem does not support symlinks, copy the files instead and keep the copied files short pointers back to `.agent-harness/rules/AGENT_GUIDE.md`.
+symlink를 지원하지 않는 환경에서는 파일을 복사해도 됩니다. 다만 복사본에는 실제 원본이 `.agent-harness/rules/AGENT_GUIDE.md`라는 사실을 명확히 적어두는 것이 좋습니다.

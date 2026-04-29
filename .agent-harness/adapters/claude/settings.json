@@ -17,17 +17,17 @@
         "hooks": [
           {
             "type": "command",
-            "statusMessage": "Formatting changed file...",
+            "statusMessage": "변경 파일 포맷 중...",
             "command": "python3 .agent-harness/hooks/format_changed_file.py"
           },
           {
             "type": "command",
-            "statusMessage": "Running available tests...",
+            "statusMessage": "사용 가능한 테스트 실행 중...",
             "command": "python3 .agent-harness/hooks/run_tests.py"
           },
           {
             "type": "command",
-            "statusMessage": "Checking TDD coverage...",
+            "statusMessage": "TDD 대응 테스트 확인 중...",
             "command": "python3 .agent-harness/hooks/tdd_guard.py"
           }
         ]
@@ -38,7 +38,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '{\"systemMessage\": \"Universal Agent Harness stop hook complete.\"}'"
+            "command": "echo '{\"systemMessage\": \"범용 에이전트 하네스 종료 훅 완료.\"}'"
           }
         ]
       }
