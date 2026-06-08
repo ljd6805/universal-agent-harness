@@ -289,11 +289,8 @@ policy    tdd_guard/test_failure 같은 정책
 
 ## 8. 현재 공통 hook
 
-현재 공통 hook 스크립트는 다음과 같습니다.
-
-- `.agent-harness/hooks/format_changed_file.py`
-- `.agent-harness/hooks/run_tests.py`
-- `.agent-harness/hooks/tdd_guard.py`
+> 지금 켜져 있는 hook의 전체 목록과 on/off 상태는 [`ACTIVE_RULES.ko.md`](../.agent-harness/rules/ACTIVE_RULES.ko.md)를 참고하세요.
+> 아래 절에서는 각 hook이 *어떻게* 동작하는지를 설명합니다.
 
 ### 8.1 format_changed_file.py
 
@@ -329,6 +326,8 @@ formatter가 없으면 조용히 넘어갑니다.
 이 guard는 아직 강한 차단이 아니라 warning 중심입니다.
 
 ## 9. 도구별 적용 범위
+
+> 각 규칙이 어떤 도구에 강제되고 어떤 도구에는 권고 수준인지는 [`ACTIVE_RULES.ko.md`](../.agent-harness/rules/ACTIVE_RULES.ko.md)의 스냅샷을 함께 참고하세요.
 
 현재 도구별 적용 범위는 다음과 같습니다.
 
