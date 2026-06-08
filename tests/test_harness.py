@@ -105,6 +105,15 @@ class ActiveRulesDocTest(unittest.TestCase):
                 f"hook script {script!r} is missing from ACTIVE_RULES.ko.md",
             )
 
+    def test_stop_hook_presence_is_documented(self) -> None:
+        has_stop_hook = bool(self.settings.get("hooks", {}).get("Stop"))
+        documents_stop_hook = bool(re.search(r"^\s*Stop:", self.spec_text, re.MULTILINE))
+        self.assertEqual(
+            has_stop_hook,
+            documents_stop_hook,
+            "Stop hook 존재 여부가 .claude/settings.json과 ACTIVE_RULES.ko.md에서 일치하지 않습니다",
+        )
+
     def test_no_documented_hook_script_is_stale(self) -> None:
         documented = set(re.findall(r'script: "([^"]+)"', self.spec_text))
         actual = _hook_scripts(self.settings)

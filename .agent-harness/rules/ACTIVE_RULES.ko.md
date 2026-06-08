@@ -4,8 +4,14 @@
 
 `HARNESS_GUIDE.ko.md`가 "왜 이렇게 설계했는가"를 설명하는 문서라면, 이 문서는 "지금 무엇이 켜져 있는가"만 빠르게 보여주는 것이 목적입니다.
 
-> 이 문서의 YAML 블록은 `.claude/settings.json` / `.agent-harness/adapters/*/settings.json` 및 `AGENT_GUIDE.md`의 실제 내용과 `tests/test_harness.py`로 동기화 검증됩니다.
-> **harness 설정을 바꿀 때는 이 문서의 YAML 블록도 함께 수정하세요.** 어긋나면 테스트가 실패합니다.
+> 이 문서의 YAML 블록 중 다음 항목은 `.claude/settings.json`과 `tests/test_harness.py`(`ActiveRulesDocTest`)로 **자동 동기화 검증**됩니다.
+> - `permissions.allow`의 rule 문자열
+> - `.agent-harness/hooks/*.py` hook script 경로
+> - `Stop` hook의 존재 여부
+>
+> (`.agent-harness/adapters/claude/settings.json`은 별도 테스트 `test_claude_settings_matches_shared_adapter`가 `.claude/settings.json`과 항상 동일함을 보장하므로 간접적으로 함께 검증됩니다.)
+>
+> `workflow_rules`처럼 `AGENT_GUIDE.md` 본문과 연결된 항목, hook의 세부 동작(matcher/purpose 텍스트 등)은 현재 자동 검증 대상이 **아닙니다**. 규칙을 추가·변경할 때는 이 문서의 YAML 블록도 함께 수정해야 하며, 위 자동 검증 대상 항목이 어긋나면 테스트가 실패합니다.
 
 ## 스펙 (기계가 읽는 부분)
 
@@ -66,6 +72,10 @@ workflow_rules:
     summary: "완료 보고 전 관련 테스트/검사를 실행하고, 불가능하면 이유와 다음 실행 명령을 명시한다"
     enforced_by: "run_tests.py 훅 + 자연어 지침"
     source: ".agent-harness/rules/AGENT_GUIDE.md#5-완료-전-검증한다"
+  - id: maintainable-harness-structure
+    summary: "공통 규칙/훅/adapter/프로젝트 지침을 정해진 위치에 두고, 긴 인라인 셸 명령보다 작고 검토 가능한 스크립트를 선호한다"
+    enforced_by: "자연어 지침 (자동 검증 없음)"
+    source: ".agent-harness/rules/AGENT_GUIDE.md#6-하네스를-유지보수하기-쉽게-둔다"
 ```
 
 ## 설명 (사람이 읽는 부분)
