@@ -48,6 +48,44 @@ class HarnessStructureTest(unittest.TestCase):
         self.assertIn("hooks", settings)
 
 
+class ProjectTemplateTest(unittest.TestCase):
+    def test_project_template_files_exist(self) -> None:
+        self.assertTrue((ROOT / "templates/project/PROJECT_GUIDE.md").is_file())
+        self.assertTrue((ROOT / "templates/project/harness.config.json").is_file())
+
+    def test_project_config_template_is_valid_json(self) -> None:
+        config = json.loads(
+            (ROOT / "templates/project/harness.config.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        for key in ("project", "commands", "paths", "policy"):
+            self.assertIn(key, config)
+
+        for key in ("build", "test", "lint", "typecheck"):
+            self.assertIn(key, config["commands"])
+
+        for key in ("source", "tests", "protected"):
+            self.assertIn(key, config["paths"])
+
+        self.assertIn("tdd_guard", config["policy"])
+        self.assertIn("test_failure", config["policy"])
+
+    def test_project_guide_template_has_required_sections(self) -> None:
+        text = (ROOT / "templates/project/PROJECT_GUIDE.md").read_text(
+            encoding="utf-8"
+        )
+        for heading in (
+            "## 프로젝트 개요",
+            "## 작업 전 확인",
+            "## 프로젝트별 검증 명령",
+            "## 수정 주의 경로",
+            "## 프로젝트별 예외",
+            "## 완료 보고 규칙",
+        ):
+            self.assertIn(heading, text)
+
+
 class TddGuardTest(unittest.TestCase):
     def test_warns_when_production_file_has_no_matching_test(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

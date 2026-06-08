@@ -1,0 +1,24 @@
+{
+  "project": {
+    "name": "replace-with-project-name",
+    "type": "replace-with-project-type"
+  },
+  "commands": {
+    "build": "",
+    "test": "",
+    "lint": "",
+    "typecheck": ""
+  },
+  "paths": {
+    "source": [],
+    "tests": [],
+    "protected": [
+      ".env",
+      "secrets/"
+    ]
+  },
+  "policy": {
+    "tdd_guard": "warning",
+    "test_failure": "warning"
+  }
+}
