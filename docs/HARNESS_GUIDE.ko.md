@@ -78,35 +78,31 @@ GEMINI.md  -> .agent-harness/rules/AGENT_GUIDE.md
 | `.claude/` | Claude Code가 실제로 찾는 설정 위치 |
 | `tests/` | 하네스 자체가 깨지지 않았는지 확인하는 테스트 |
 
-## 4. 왜 symlink를 쓰는가
+## 4. 왜 symlink 대신 네이티브 임포트를 쓰는가
 
-이 하네스는 여러 곳에서 symlink를 사용합니다.
+이 하네스는 처음에는 진입점 파일을 symlink로 구성했습니다. symlink는 "이 파일의 실제 내용은 다른 파일에 있다"는 연결이라 같은 규칙을 여러 번 복사하지 않아도 되고 어떤 파일이 진짜 원본인지 명확하다는 장점이 있습니다.
 
-symlink는 "이 파일의 실제 내용은 다른 파일에 있다"는 연결입니다.
+하지만 symlink는 Windows를 비롯한 일부 환경과 일부 git 설정(`core.symlinks=false`)에서 제대로 동작하지 않습니다. 이런 환경에서 저장소를 clone하면 symlink가 실제 링크가 아니라 "링크 대상 경로가 적힌 일반 텍스트 파일"로 체크아웃되어, 에이전트 도구가 진입점 파일을 읽어도 규칙 내용이 아니라 경로 문자열만 보게 됩니다.
 
-현재 중요한 symlink는 네 개입니다.
+그래서 지금은 각 에이전트 도구가 지원하는 네이티브 방식으로 공통 가이드를 가리킵니다.
 
 ```text
-AGENTS.md           -> .agent-harness/rules/AGENT_GUIDE.md
-CLAUDE.md           -> .agent-harness/rules/AGENT_GUIDE.md
-GEMINI.md           -> .agent-harness/rules/AGENT_GUIDE.md
-.claude/settings.json -> ../.agent-harness/adapters/claude/settings.json
+CLAUDE.md             : "@.agent-harness/rules/AGENT_GUIDE.md" (Claude Code 네이티브 임포트)
+GEMINI.md             : "@.agent-harness/rules/AGENT_GUIDE.md" (Gemini CLI 네이티브 임포트)
+AGENTS.md             : 공통 가이드를 읽고 따르라는 안내 주석 (Codex/OpenCode는 네이티브 임포트가 없음)
+opencode.json         : "instructions" 필드로 .agent-harness/rules/AGENT_GUIDE.md 를 직접 지정
+.claude/settings.json : .agent-harness/adapters/claude/settings.json 내용을 그대로 복사
 ```
 
 이 방식의 장점은 다음과 같습니다.
 
-- 같은 규칙을 세 번 복사하지 않아도 됩니다.
-- Codex, Claude, Gemini가 같은 정책을 보게 됩니다.
-- 어떤 파일이 진짜 원본인지 명확합니다.
-- 나중에 어댑터가 많아져도 공통 코어는 그대로 유지됩니다.
+- 운영체제나 git 설정과 무관하게 항상 같은 내용을 읽습니다.
+- 각 도구가 지원하는 방식을 그대로 사용하므로 별도의 변환 과정이 필요 없습니다.
+- 공통 가이드의 실제 원본은 여전히 `.agent-harness/rules/AGENT_GUIDE.md` 하나뿐입니다.
 
-주의할 점도 있습니다.
+대신 `CLAUDE.md`/`GEMINI.md`/`.claude/settings.json`처럼 내용을 직접 적거나 복사해 둔 파일은, 원본인 `.agent-harness/` 아래 파일이 바뀌면 함께 갱신해야 한다는 점을 기억해야 합니다.
 
-- 일부 환경은 symlink를 잘 지원하지 않을 수 있습니다.
-- 그런 환경에서는 symlink 대신 짧은 안내 파일을 복사해서 둘 수 있습니다.
-- GitHub에서는 symlink가 링크 파일로 보이므로, 의도한 구조인지 테스트로 확인하는 것이 좋습니다.
-
-현재 `tests/test_harness.py`는 이 symlink들이 올바른 위치를 가리키는지 검사합니다.
+현재 `tests/test_harness.py`는 각 진입점이 공통 가이드를 올바르게 가리키는지, `.claude/settings.json`이 공유 어댑터 설정과 일치하는지 검사합니다.
 
 ## 5. 공통 규칙 파일: `.agent-harness/rules/AGENT_GUIDE.md`
 
@@ -538,9 +534,9 @@ python3 -m unittest discover -s tests
 | 영역 | 현재 상태 |
 | --- | --- |
 | 범용 규칙 | 있음 |
-| Codex 진입점 | 있음, `AGENTS.md` symlink |
-| Claude 진입점 | 있음, `CLAUDE.md` symlink |
-| Gemini 진입점 | 있음, `GEMINI.md` symlink |
+| Codex/OpenCode 진입점 | 있음, `AGENTS.md` 안내 주석 + `opencode.json` instructions |
+| Claude 진입점 | 있음, `CLAUDE.md` 네이티브 임포트 (`@.agent-harness/...`) |
+| Gemini 진입점 | 있음, `GEMINI.md` 네이티브 임포트 (`@.agent-harness/...`) |
 | Claude 훅 | 있음 |
 | Codex 훅 | 아직 없음 |
 | Gemini 훅 | 아직 없음 |

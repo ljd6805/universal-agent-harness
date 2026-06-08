@@ -102,8 +102,8 @@ python3 -m unittest discover -s tests
 
 현재 테스트는 다음을 확인합니다.
 
-- 에이전트 진입점 symlink
-- Claude 설정 symlink
+- 에이전트 진입점이 공통 가이드를 가리키는지 (네이티브 임포트 또는 안내 주석)
+- `.claude/settings.json`이 공유 어댑터 설정과 일치하는지
 - Claude 어댑터 JSON 유효성
 - TDD 가드 경고 동작
 - 대응 테스트가 있을 때 TDD 가드가 경고하지 않는 동작
@@ -120,15 +120,18 @@ python3 -m unittest discover -s tests
 
 ## 다른 프로젝트에 적용하기
 
-하네스 디렉터리를 복사하고, 각 에이전트 진입점 링크를 만듭니다.
+이 하네스는 symlink 대신 각 도구의 네이티브 임포트(또는 그에 준하는) 방식을 사용합니다. symlink는 Windows 등 일부 환경에서 잘 동작하지 않으므로, 실제 파일에 공통 가이드를 가리키는 내용을 직접 적어 둡니다.
 
 ```bash
 cp -r .agent-harness /path/to/project/
-ln -s .agent-harness/rules/AGENT_GUIDE.md /path/to/project/AGENTS.md
-ln -s .agent-harness/rules/AGENT_GUIDE.md /path/to/project/CLAUDE.md
-ln -s .agent-harness/rules/AGENT_GUIDE.md /path/to/project/GEMINI.md
 mkdir -p /path/to/project/.claude
-ln -s ../.agent-harness/adapters/claude/settings.json /path/to/project/.claude/settings.json
 ```
 
-symlink를 지원하지 않는 환경에서는 파일을 복사해도 됩니다. 다만 복사본에는 실제 원본이 `.agent-harness/rules/AGENT_GUIDE.md`라는 사실을 명확히 적어두는 것이 좋습니다.
+그런 다음 도구별 진입점을 다음과 같이 만듭니다.
+
+- `CLAUDE.md`, `GEMINI.md`: Claude Code와 Gemini CLI는 `@경로` 임포트 문법을 지원하므로 `@.agent-harness/rules/AGENT_GUIDE.md` 한 줄을 작성합니다.
+- `AGENTS.md`: Codex/OpenCode는 네이티브 임포트가 없으므로, 공통 가이드 파일을 읽고 따르라는 안내 주석을 작성합니다.
+- `opencode.json`: OpenCode는 `instructions` 필드로 규칙 파일을 직접 지정할 수 있습니다 (`{ "instructions": [".agent-harness/rules/AGENT_GUIDE.md"] }`).
+- `.claude/settings.json`: `.agent-harness/adapters/claude/settings.json`의 내용을 그대로 복사해 둡니다.
+
+이렇게 하면 실제 원본은 항상 `.agent-harness/rules/AGENT_GUIDE.md`와 `.agent-harness/adapters/claude/settings.json`에 있고, 각 진입점은 그 내용을 가리키거나 복사한 사본이라는 점을 명확히 유지할 수 있습니다.
