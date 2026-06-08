@@ -1,1 +1,1 @@
-.agent-harness/rules/AGENT_GUIDE.md
+@.agent-harness/rules/AGENT_GUIDE.md
