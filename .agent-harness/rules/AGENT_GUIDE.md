@@ -1,6 +1,6 @@
 # 범용 에이전트 작업 지침
 
-이 파일은 이 저장소에서 Codex, Claude, Gemini와 다른 코딩 에이전트가 공통으로 따라야 하는 작업 지침입니다.
+이 파일은 이 저장소에서 Codex, Claude, Gemini, OpenCode와 다른 코딩 에이전트가 공통으로 따라야 하는 작업 지침입니다.
 
 ## 목적
 
@@ -11,6 +11,7 @@
 - Codex: `AGENTS.md`
 - Claude Code: `CLAUDE.md`
 - Gemini: `GEMINI.md`
+- OpenCode: `opencode.json`
 
 ## 핵심 작업 흐름
 
@@ -23,7 +24,20 @@
 - 기존 사용자 변경이 있는지 확인합니다.
 - 현재 작업과 무관한 사용자 변경은 보존합니다.
 
-### 2. 기본값은 TDD다
+### 2. 프로젝트별 지침을 확인한다
+
+프로젝트에 다음 파일이 있으면 공통 지침과 함께 읽고 따릅니다.
+
+- `.agent-harness/rules/PROJECT_GUIDE.md`
+- `.agent-harness/harness.config.json`
+
+`PROJECT_GUIDE.md`는 프로젝트별 자연어 지침입니다. 프로젝트 개요, 검증 방식, 수정 주의 경로, 보고 규칙처럼 작업 맥락에 필요한 내용을 확인합니다.
+
+`harness.config.json`은 프로젝트별 실행 설정입니다. build, test, lint, typecheck 명령과 source/test/protected path, policy 값을 확인합니다.
+
+공통 지침과 프로젝트별 지침이 모두 적용되는 경우, 더 구체적인 프로젝트별 지침을 우선 참고하되 공통 안전 원칙을 무시하지 않습니다.
+
+### 3. 기본값은 TDD다
 
 프로덕션 코드는 실패하는 테스트를 먼저 작성한 뒤 구현하는 것을 기본값으로 삼습니다.
 
@@ -43,7 +57,7 @@
 - Python: `test_<name>.py` 또는 `<name>_test.py`
 - TypeScript 또는 JavaScript: `<name>.test.ts`, `<name>.spec.ts`, `<name>.test.js`, `<name>.spec.js`
 
-### 3. 병렬화 가능성을 판단한다
+### 4. 병렬화 가능성을 판단한다
 
 작업을 시작할 때 일을 안전하게 나눌 수 있는지 판단합니다.
 
@@ -59,19 +73,22 @@
 - 전체 시스템을 함께 봐야 디버깅할 수 있습니다.
 - 여러 수정이 같은 파일이나 강하게 결합된 동작을 대상으로 합니다.
 
-### 4. 완료 전 검증한다
+### 5. 완료 전 검증한다
 
 완료를 보고하기 전에 다음을 수행합니다.
 
 - 가능한 가장 관련 있는 테스트나 검사를 실행합니다.
+- 프로젝트별 `harness.config.json`이 있으면 그 안의 검증 명령을 우선 참고합니다.
 - 테스트가 없다면 구체적인 수동 확인이나 스크립트 수준 확인을 수행합니다.
 - 검증을 실행할 수 없다면 이유와 다음에 실행해야 할 명령을 명시합니다.
 
-### 5. 하네스를 유지보수하기 쉽게 둔다
+### 6. 하네스를 유지보수하기 쉽게 둔다
 
 - 공통 규칙은 `.agent-harness/rules/`에 둡니다.
 - 공통 자동화는 `.agent-harness/hooks/`에 둡니다.
 - 도구별 설정은 `.agent-harness/adapters/<tool>/`에 둡니다.
+- 프로젝트별 자연어 지침은 `.agent-harness/rules/PROJECT_GUIDE.md`에 둡니다.
+- 프로젝트별 실행 설정은 `.agent-harness/harness.config.json`에 둡니다.
 - 루트의 에이전트 파일은 공통 가이드를 가리키는 진입점으로 유지합니다.
 - 긴 인라인 셸 명령보다 작고 검토 가능한 스크립트를 선호합니다.
 
