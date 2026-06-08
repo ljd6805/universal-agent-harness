@@ -92,12 +92,14 @@
 - 루트의 에이전트 파일은 공통 가이드를 가리키는 진입점으로 유지합니다.
 - 긴 인라인 셸 명령보다 작고 검토 가능한 스크립트를 선호합니다.
 
-## 현재 공통 훅
+## 현재 적용된 규칙 확인
 
-현재 공통 훅 스크립트는 다음과 같습니다.
+지금 이 하네스에 어떤 permission, hook, 작업 규칙이 실제로 켜져 있는지는
+[`.agent-harness/rules/ACTIVE_RULES.ko.md`](ACTIVE_RULES.ko.md)에서 한눈에 확인할 수 있습니다.
 
-- `.agent-harness/hooks/format_changed_file.py`
-- `.agent-harness/hooks/run_tests.py`
-- `.agent-harness/hooks/tdd_guard.py`
+이 문서(AGENT_GUIDE.md)가 "에이전트가 따라야 할 규칙 원문"이라면, `ACTIVE_RULES.ko.md`는
+그 규칙과 실제 설정 파일(`.claude/settings.json` 등)을 사람이 보기 쉽게 정리한 거울이며
+`tests/test_harness.py`로 동기화가 검증됩니다. 위 규칙을 추가·변경할 때는
+`ACTIVE_RULES.ko.md`도 함께 갱신해야 테스트가 통과합니다.
 
-각 도구가 프로젝트 훅을 지원하면 어댑터에서 이 스크립트들을 호출할 수 있습니다.
+각 도구가 프로젝트 훅을 지원하면 어댑터에서 공통 훅 스크립트를 호출할 수 있습니다.

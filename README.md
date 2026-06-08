@@ -44,9 +44,12 @@ Project harness는 “이 프로젝트에서는 어떻게 검증해야 하는가
 
 ## 먼저 읽을 문서
 
-하네스를 제대로 이해하고 강화 방향을 고민하려면 아래 문서부터 읽는 것을 권장합니다.
+목적에 따라 읽어야 할 문서가 다릅니다.
 
-- [범용 에이전트 하네스 상세 가이드](docs/HARNESS_GUIDE.ko.md)
+- **지금 이 하네스에 어떤 permission, hook, 작업 규칙이 켜져 있는지 빠르게 확인하고 싶다면** → [현재 적용된 규칙](.agent-harness/rules/ACTIVE_RULES.ko.md)
+- **왜 이런 구조와 규칙을 선택했는지, 한계와 강화 방향이 궁금하다면** → [범용 에이전트 하네스 상세 가이드](docs/HARNESS_GUIDE.ko.md)
+
+"현재 적용된 규칙" 문서는 실제 설정 파일(`.claude/settings.json`, `AGENT_GUIDE.md` 등)의 거울이며, `tests/test_harness.py`로 동기화가 검증됩니다. 설정을 바꿀 때는 이 문서도 함께 갱신해야 합니다.
 
 상세 가이드에서는 다음 내용을 설명합니다.
 
@@ -78,7 +81,8 @@ Project harness는 “이 프로젝트에서는 어떻게 검증해야 하는가
 │   │   ├── run_tests.py
 │   │   └── tdd_guard.py
 │   └── rules/
-│       └── AGENT_GUIDE.md
+│       ├── AGENT_GUIDE.md
+│       └── ACTIVE_RULES.ko.md
 ├── templates/
 │   └── project/
 │       ├── PROJECT_GUIDE.md
@@ -211,6 +215,7 @@ python3 -m unittest discover -s tests
 - `templates/project/PROJECT_GUIDE.md`가 기본 section을 포함하는지
 - TDD guard가 테스트 없는 production 파일에 경고하는지
 - 대응 테스트가 있을 때 TDD guard가 경고하지 않는지
+- `ACTIVE_RULES.ko.md`의 YAML 스펙 블록이 `.claude/settings.json`과 어긋나지 않는지 (permission rule, hook script 경로, `Stop` hook 존재 여부를 양방향으로 비교 — 실제로 켜진 항목이 문서에 빠짐없이 적혀 있는지 + 문서에 적힌 항목 중 더 이상 켜져 있지 않은 stale 항목은 없는지)
 
 ## 강화 로드맵
 
