@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -46,6 +47,73 @@ class HarnessStructureTest(unittest.TestCase):
         )
         self.assertIn("permissions", settings)
         self.assertIn("hooks", settings)
+
+
+def _hook_scripts(settings: dict) -> set[str]:
+    scripts: set[str] = set()
+    for entries in settings.get("hooks", {}).values():
+        for entry in entries:
+            for hook in entry.get("hooks", []):
+                match = re.search(r"(\.agent-harness/hooks/\S+\.py)", hook.get("command", ""))
+                if match:
+                    scripts.add(match.group(1))
+    return scripts
+
+
+class ActiveRulesDocTest(unittest.TestCase):
+    """ACTIVE_RULES.ko.md의 YAML 스펙 블록이 .claude/settings.json과 어긋나지 않는지 확인한다.
+
+    PyYAML 같은 추가 의존성 없이, 스펙 블록 텍스트에서 `rule:`/`script:` 값을
+    추출해 실제 설정과 양방향(빠짐 없음 + stale 항목 없음)으로 비교한다.
+    """
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        doc_text = (ROOT / ".agent-harness/rules/ACTIVE_RULES.ko.md").read_text(
+            encoding="utf-8"
+        )
+        match = re.search(r"```yaml\n(.*?)\n```", doc_text, re.DOTALL)
+        assert match is not None, "ACTIVE_RULES.ko.md must contain a fenced ```yaml spec block"
+        cls.spec_text = match.group(1)
+        cls.settings = json.loads(
+            (ROOT / ".claude/settings.json").read_text(encoding="utf-8")
+        )
+
+    def test_every_permission_rule_in_settings_is_documented(self) -> None:
+        for rule in self.settings["permissions"]["allow"]:
+            self.assertIn(
+                f'"{rule}"',
+                self.spec_text,
+                f"permission rule {rule!r} is missing from ACTIVE_RULES.ko.md",
+            )
+
+    def test_no_documented_permission_rule_is_stale(self) -> None:
+        documented = re.findall(r'rule: "([^"]+)"', self.spec_text)
+        actual = self.settings["permissions"]["allow"]
+        for rule in documented:
+            self.assertIn(
+                rule,
+                actual,
+                f"ACTIVE_RULES.ko.md documents permission {rule!r} that is not in .claude/settings.json",
+            )
+
+    def test_every_hook_script_in_settings_is_documented(self) -> None:
+        for script in _hook_scripts(self.settings):
+            self.assertIn(
+                script,
+                self.spec_text,
+                f"hook script {script!r} is missing from ACTIVE_RULES.ko.md",
+            )
+
+    def test_no_documented_hook_script_is_stale(self) -> None:
+        documented = set(re.findall(r'script: "([^"]+)"', self.spec_text))
+        actual = _hook_scripts(self.settings)
+        for script in documented:
+            self.assertIn(
+                script,
+                actual,
+                f"ACTIVE_RULES.ko.md documents hook script {script!r} that is not wired up in .claude/settings.json",
+            )
 
 
 class ProjectTemplateTest(unittest.TestCase):
