@@ -40,6 +40,8 @@ Base harness의 공통 규칙은 `.agent-harness/rules/AGENT_GUIDE.md`에 있고
 
 에이전트가 임의로 수정하거나 출력하면 안 되는 경로를 적습니다.
 
+기본 보호 경로는 `.agent-harness/harness.config.json`의 `paths.protected`에 둡니다. 아래 예시 중 이 프로젝트에 실제로 필요한 항목만 config에 추가합니다.
+
 예시:
 
 - `.env`
