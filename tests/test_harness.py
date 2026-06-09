@@ -328,6 +328,22 @@ class RunTestsTest(unittest.TestCase):
 
         self.assertEqual(2, result.returncode)
 
+    def test_config_command_not_found_treated_as_failure(self) -> None:
+        """commands.test 에 없는 실행 파일을 지정하면 실패(127)로 처리하고, strict 시 exit 2로 차단한다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            harness_dir = project / ".agent-harness"
+            harness_dir.mkdir()
+            config = {
+                "commands": {"test": "missing-test-runner-xyz --check"},
+                "policy": {"test_failure": "strict"},
+            }
+            (harness_dir / "harness.config.json").write_text(json.dumps(config))
+
+            result = self._run_hook(project)
+
+        self.assertEqual(2, result.returncode)
+
     def test_runs_all_detected_runners(self) -> None:
         """Python 테스트와 package.json 이 모두 있으면 둘 다 감지한다 (실행은 성공 기준)."""
         with tempfile.TemporaryDirectory() as tmp:

@@ -44,12 +44,13 @@ def has_python_tests(project: Path) -> bool:
     return False
 
 
-def run(command: list[str], cwd: Path) -> int:
+def run(command: list[str], cwd: Path, missing_ok: bool = True) -> int:
     try:
         result = subprocess.run(command, cwd=cwd, check=False)
         return result.returncode
     except FileNotFoundError:
-        return 0
+        # missing_ok=False: 명시적 config command — 실행 파일 없음을 실패로 처리
+        return 0 if missing_ok else 127
 
 
 def main() -> int:
@@ -68,7 +69,7 @@ def main() -> int:
     # config에 test 명령이 있으면 그것만 실행
     config_test_cmd = config.get("commands", {}).get("test", "").strip()
     if config_test_cmd:
-        rc = run(shlex.split(config_test_cmd), project)
+        rc = run(shlex.split(config_test_cmd), project, missing_ok=False)
         if rc != 0 and is_strict:
             return 2
         return 0
