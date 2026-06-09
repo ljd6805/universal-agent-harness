@@ -291,14 +291,16 @@ class RunTestsTest(unittest.TestCase):
         )
 
     def test_uses_config_test_command_when_set(self) -> None:
-        """commands.test 가 설정된 경우 해당 명령만 실행한다 (auto-detect 무시)."""
+        """commands.test 가 설정된 경우 해당 명령이 실제로 실행된다."""
         with tempfile.TemporaryDirectory() as tmp:
             project = Path(tmp)
-            # 간단히 성공하는 명령을 지정
             harness_dir = project / ".agent-harness"
             harness_dir.mkdir()
+            # -c 대신 스크립트 파일로 quoting 문제 회피
+            script = project / "custom_test.py"
+            script.write_text("print('custom test ran')\n")
             config = {
-                "commands": {"test": f"{sys.executable} -c 'print(\"custom test ran\")'"},
+                "commands": {"test": f"{sys.executable} custom_test.py"},
                 "policy": {"test_failure": "warning"},
             }
             (harness_dir / "harness.config.json").write_text(json.dumps(config))
@@ -306,6 +308,7 @@ class RunTestsTest(unittest.TestCase):
             result = self._run_hook(project)
 
         self.assertEqual(0, result.returncode)
+        self.assertIn("custom test ran", result.stdout)
 
     def test_strict_test_failure_blocks(self) -> None:
         """policy.test_failure=strict 이면 테스트 실패 시 exit code 2로 차단한다."""
@@ -313,8 +316,10 @@ class RunTestsTest(unittest.TestCase):
             project = Path(tmp)
             harness_dir = project / ".agent-harness"
             harness_dir.mkdir()
+            script = project / "fail_test.py"
+            script.write_text("raise SystemExit(1)\n")
             config = {
-                "commands": {"test": f"{sys.executable} -c 'raise SystemExit(1)'"},
+                "commands": {"test": f"{sys.executable} fail_test.py"},
                 "policy": {"test_failure": "strict"},
             }
             (harness_dir / "harness.config.json").write_text(json.dumps(config))

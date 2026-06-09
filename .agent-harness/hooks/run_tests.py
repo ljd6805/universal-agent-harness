@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -43,16 +44,6 @@ def has_python_tests(project: Path) -> bool:
     return False
 
 
-def has_js_tests(project: Path) -> bool:
-    ignored = {".git", "node_modules"}
-    for path in project.rglob("*"):
-        if any(part in ignored for part in path.parts):
-            continue
-        if ".test." in path.name or ".spec." in path.name:
-            return True
-    return False
-
-
 def run(command: list[str], cwd: Path) -> int:
     try:
         result = subprocess.run(command, cwd=cwd, check=False)
@@ -77,7 +68,7 @@ def main() -> int:
     # config에 test 명령이 있으면 그것만 실행
     config_test_cmd = config.get("commands", {}).get("test", "").strip()
     if config_test_cmd:
-        rc = run(config_test_cmd.split(), project)
+        rc = run(shlex.split(config_test_cmd), project)
         if rc != 0 and is_strict:
             return 2
         return 0
