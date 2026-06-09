@@ -15,10 +15,10 @@ ROOT = Path(__file__).resolve().parents[1]
 class HarnessStructureTest(unittest.TestCase):
     def test_native_import_entry_points_reference_the_shared_guide(self) -> None:
         guide = ".agent-harness/rules/AGENT_GUIDE.md"
-        for name in ("CLAUDE.md", "GEMINI.md"):
-            path = ROOT / name
-            self.assertFalse(path.is_symlink(), name)
-            self.assertIn(f"@{guide}", path.read_text(encoding="utf-8"))
+        # Tier 1: Claude Code (네이티브 @import)
+        path = ROOT / "CLAUDE.md"
+        self.assertFalse(path.is_symlink(), "CLAUDE.md")
+        self.assertIn(f"@{guide}", path.read_text(encoding="utf-8"))
 
     def test_prompt_based_entry_point_references_the_shared_guide(self) -> None:
         guide = ".agent-harness/rules/AGENT_GUIDE.md"
@@ -30,23 +30,27 @@ class HarnessStructureTest(unittest.TestCase):
         config = json.loads((ROOT / "opencode.json").read_text(encoding="utf-8"))
         self.assertIn(".agent-harness/rules/AGENT_GUIDE.md", config["instructions"])
 
-    def test_claude_settings_matches_shared_adapter(self) -> None:
+    def test_dropped_agents_have_no_stale_entry_points(self) -> None:
+        """범위 축소: Gemini 진입점/어댑터 디렉터리가 남아있지 않아야 한다."""
+        self.assertFalse((ROOT / "GEMINI.md").exists())
+        self.assertFalse((ROOT / ".agent-harness/adapters").exists())
+
+    def test_claude_settings_is_the_single_canonical_source(self) -> None:
+        """Tier 1 강제 설정의 정본은 .claude/settings.json 하나뿐이다 (어댑터 사본 없음)."""
         path = ROOT / ".claude/settings.json"
         self.assertFalse(path.is_symlink())
-        adapter_path = ROOT / ".agent-harness/adapters/claude/settings.json"
-        self.assertEqual(
-            json.loads(path.read_text(encoding="utf-8")),
-            json.loads(adapter_path.read_text(encoding="utf-8")),
-        )
-
-    def test_claude_adapter_is_valid_json(self) -> None:
-        settings = json.loads(
-            (ROOT / ".agent-harness/adapters/claude/settings.json").read_text(
-                encoding="utf-8"
-            )
-        )
+        settings = json.loads(path.read_text(encoding="utf-8"))
         self.assertIn("permissions", settings)
         self.assertIn("hooks", settings)
+
+    def test_support_matrix_documents_agent_tiers(self) -> None:
+        """AGENT_GUIDE.md 가 등급 매트릭스를 명시해야 한다."""
+        text = (ROOT / ".agent-harness/rules/AGENT_GUIDE.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("## 지원 에이전트 및 등급", text)
+        for agent in ("Claude Code", "OpenCode", "Codex"):
+            self.assertIn(agent, text)
 
 
 def _hook_scripts(settings: dict) -> set[str]:

@@ -1,17 +1,26 @@
 # 범용 에이전트 작업 지침
 
-이 파일은 이 저장소에서 Codex, Claude, Gemini, OpenCode와 다른 코딩 에이전트가 공통으로 따라야 하는 작업 지침입니다.
+이 파일은 이 저장소에서 코딩 에이전트가 공통으로 따라야 하는 작업 지침입니다.
 
 ## 목적
 
 이 저장소는 도구별로 규칙을 중복 작성하지 않고, 에이전트의 행동을 관리하고 검토하며 점진적으로 강화하기 위해 범용 하네스를 사용합니다.
 
-도구별 진입점은 이 파일을 가리켜야 합니다.
+## 지원 에이전트 및 등급
 
-- Codex: `AGENTS.md`
-- Claude Code: `CLAUDE.md`
-- Gemini: `GEMINI.md`
-- OpenCode: `opencode.json`
+이 하네스는 **규칙(rules)은 모든 에이전트에 공통으로 적용**하지만, **강제(enforcement)는 도구의 메커니즘이 달라 동등하게 보편화할 수 없습니다.** 그래서 에이전트를 등급으로 나눠 관리합니다.
+
+| 에이전트    | 등급                   | 진입점          | 받는 것                                                    |
+| ----------- | ---------------------- | --------------- | ---------------------------------------------------------- |
+| Claude Code | **Tier 1 (완전 강제)** | `CLAUDE.md`     | 공통 규칙 + hook/permission 강제 (`.claude/settings.json`) |
+| OpenCode    | **Tier 2 (규칙만)**    | `opencode.json` | 공통 규칙 (자연어 지침), 강제 없음                         |
+| Codex       | **Tier 2 (규칙만)**    | `AGENTS.md`     | 공통 규칙 (주로 PR 리뷰 컨텍스트), 강제 없음               |
+
+- **Tier 1**은 `.claude/settings.json`의 hook과 permission으로 규칙을 실제로 강제합니다. 강제 동작의 정본은 이 파일 하나입니다.
+- **Tier 2**는 `AGENT_GUIDE.md`를 읽고 따르지만, 도구 차원의 자동 강제는 없습니다. 규칙 준수는 에이전트의 판단에 의존합니다.
+- 새 에이전트를 추가할 때는 먼저 이 표에 등급과 함께 등록하고, Tier 1로 올릴 경우에만 강제 설정을 작성합니다. 모든 에이전트에 강제 기능을 동등하게 맞추려 하지 않습니다.
+
+모든 진입점은 이 파일(`AGENT_GUIDE.md`)을 가리킵니다.
 
 ## 핵심 작업 흐름
 
@@ -85,8 +94,8 @@
 ### 6. 하네스를 유지보수하기 쉽게 둔다
 
 - 공통 규칙은 `.agent-harness/rules/`에 둡니다.
-- 공통 자동화는 `.agent-harness/hooks/`에 둡니다.
-- 도구별 설정은 `.agent-harness/adapters/<tool>/`에 둡니다.
+- 공통 자동화(hook 스크립트)는 `.agent-harness/hooks/`에 둡니다. hook 스크립트는 stdin JSON 계약을 따르며 특정 에이전트에 종속되지 않습니다.
+- Tier 1(Claude)의 강제 설정은 네이티브 경로인 `.claude/settings.json` **한 곳**에만 둡니다. 별도 어댑터 사본을 만들어 이중 관리하지 않습니다.
 - 프로젝트별 자연어 지침은 `.agent-harness/rules/PROJECT_GUIDE.md`에 둡니다.
 - 프로젝트별 실행 설정은 `.agent-harness/harness.config.json`에 둡니다.
 - 루트의 에이전트 파일은 공통 가이드를 가리키는 진입점으로 유지합니다.
@@ -102,4 +111,4 @@
 `tests/test_harness.py`로 동기화가 검증됩니다. 위 규칙을 추가·변경할 때는
 `ACTIVE_RULES.ko.md`도 함께 갱신해야 테스트가 통과합니다.
 
-각 도구가 프로젝트 훅을 지원하면 어댑터에서 공통 훅 스크립트를 호출할 수 있습니다.
+Tier 1(Claude)은 `.claude/settings.json`에서 `.agent-harness/hooks/`의 공통 훅 스크립트를 호출합니다. Tier 2 에이전트는 훅 강제 없이 규칙 문서만 따릅니다.
