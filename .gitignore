@@ -1,6 +1,5 @@
-.claude/settings.local.json
-.claude/logs/
 .agent-harness/logs/
+.codex/logs/
 
 node_modules/
 .venv/
