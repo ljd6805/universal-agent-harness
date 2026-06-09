@@ -1,8 +1,8 @@
 # Project Guide
 
-이 파일은 project harness에서 사용하는 프로젝트별 작업 지침 template입니다.
+이 파일은 Codex project harness에서 사용하는 프로젝트별 작업 지침 template입니다.
 
-Base harness의 공통 규칙은 `.agent-harness/rules/AGENT_GUIDE.md`에 있고, 이 파일은 해당 프로젝트에만 적용되는 추가 지침을 담습니다.
+Codex base harness의 공통 규칙은 `.agent-harness/rules/CODEX.md`에 있고, 이 파일은 해당 프로젝트에만 적용되는 추가 지침을 담습니다.
 
 ## 프로젝트 개요
 
@@ -16,7 +16,7 @@ Base harness의 공통 규칙은 `.agent-harness/rules/AGENT_GUIDE.md`에 있고
 
 ## 작업 전 확인
 
-에이전트는 작업을 시작하기 전에 다음을 확인합니다.
+Codex는 작업을 시작하기 전에 다음을 확인합니다.
 
 - 관련 README, docs, architecture 문서를 먼저 읽습니다.
 - 변경 대상 파일과 연관된 테스트를 확인합니다.
@@ -38,7 +38,7 @@ Base harness의 공통 규칙은 `.agent-harness/rules/AGENT_GUIDE.md`에 있고
 
 ## 수정 주의 경로
 
-에이전트가 임의로 수정하거나 출력하면 안 되는 경로를 적습니다.
+Codex가 임의로 수정하거나 출력하면 안 되는 경로를 적습니다.
 
 기본 보호 경로는 `.agent-harness/harness.config.json`의 `paths.protected`에 둡니다. 아래 예시 중 이 프로젝트에 실제로 필요한 항목만 config에 추가합니다.
 
@@ -52,7 +52,7 @@ Base harness의 공통 규칙은 `.agent-harness/rules/AGENT_GUIDE.md`에 있고
 
 ## 프로젝트별 예외
 
-공통 규칙과 다르게 적용해야 하는 프로젝트별 예외를 적습니다.
+Codex 공통 규칙과 다르게 적용해야 하는 프로젝트별 예외를 적습니다.
 
 예시:
 
@@ -62,7 +62,7 @@ Base harness의 공통 규칙은 `.agent-harness/rules/AGENT_GUIDE.md`에 있고
 
 ## 완료 보고 규칙
 
-작업 완료 시 에이전트는 다음을 보고합니다.
+작업 완료 시 Codex는 다음을 보고합니다.
 
 - 변경 요약
 - 실행한 검증 명령과 결과
