@@ -10,7 +10,7 @@
 > - `.agent-harness/hooks/*.py` hook script 경로
 > - `Stop` hook의 존재 여부
 >
-> (`.agent-harness/adapters/claude/settings.json`은 별도 테스트 `test_claude_settings_matches_shared_adapter`가 `.claude/settings.json`과 항상 동일함을 보장하므로 간접적으로 함께 검증됩니다.)
+> (Tier 1 강제 설정의 정본은 `.claude/settings.json` 한 곳뿐입니다. 별도 어댑터 사본은 두지 않으며, `test_claude_settings_is_the_single_canonical_source`가 이 파일을 직접 검증합니다.)
 >
 > `workflow_rules`처럼 `AGENT_GUIDE.md` 본문과 연결된 항목, hook의 세부 동작(matcher/purpose 텍스트 등)은 현재 자동 검증 대상이 **아닙니다**. 규칙을 추가·변경할 때는 이 문서의 YAML 블록도 함께 수정해야 하며, 위 자동 검증 대상 항목이 어긋나면 테스트가 실패합니다.
 
@@ -74,7 +74,7 @@ workflow_rules:
     enforced_by: "run_tests.py 훅 — commands.test 설정 시 해당 명령 사용, 없으면 Python/JS 모두 자동 감지하여 실행. policy.test_failure=warning(기본)이면 경고만, strict이면 exit 2로 차단."
     source: ".agent-harness/rules/AGENT_GUIDE.md#5-완료-전-검증한다"
   - id: maintainable-harness-structure
-    summary: "공통 규칙/훅/adapter/프로젝트 지침을 정해진 위치에 두고, 긴 인라인 셸 명령보다 작고 검토 가능한 스크립트를 선호한다"
+    summary: "공통 규칙/훅/Tier 1 강제 설정(.claude/settings.json)/프로젝트 지침을 정해진 위치에 두고, 긴 인라인 셸 명령보다 작고 검토 가능한 스크립트를 선호한다"
     enforced_by: "자연어 지침 (자동 검증 없음)"
     source: ".agent-harness/rules/AGENT_GUIDE.md#6-하네스를-유지보수하기-쉽게-둔다"
 ```
@@ -89,7 +89,7 @@ workflow_rules:
 
 ### Hooks
 
-`Write|Edit|MultiEdit` 직후에 포맷팅 → 테스트 실행 → TDD 점검이 순서대로 실행됩니다. 세 훅 모두 **차단(block)이 아니라 안내/경고** 목적입니다 — 즉, 세션을 멈추지 않고 메시지만 보여줍니다. `Stop` 훅은 별도 스크립트 없이 고정 메시지를 출력하는 가장 단순한 형태입니다.
+`Write|Edit|MultiEdit` 직후에 포맷팅 → 테스트 실행 → TDD 점검이 순서대로 실행됩니다. 기본 template 정책(`warning`)에서는 세 훅 모두 안내/경고 목적으로 동작합니다 — 즉, 세션을 멈추지 않고 메시지만 보여줍니다. 다만 project harness에서 `policy.tdd_guard` 또는 `policy.test_failure`를 `strict`로 설정하면 `tdd_guard.py`와 `run_tests.py`는 exit code 2로 작업을 차단할 수 있습니다. `Stop` 훅은 별도 스크립트 없이 고정 메시지를 출력하는 가장 단순한 형태입니다.
 
 ### Workflow rules
 
@@ -97,7 +97,7 @@ workflow_rules:
 
 ## 갱신 절차
 
-1. `.claude/settings.json` (또는 `.agent-harness/adapters/*/settings.json`, `AGENT_GUIDE.md`)을 변경한다.
+1. `.claude/settings.json` (또는 `AGENT_GUIDE.md`)을 변경한다.
 2. 위 YAML 블록의 해당 항목을 함께 수정한다 (추가/삭제/설명 변경).
 3. `python3 -m unittest tests/test_harness.py`를 실행해 동기화 테스트를 통과시킨다.
 
