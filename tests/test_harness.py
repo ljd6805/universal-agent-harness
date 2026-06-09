@@ -201,6 +201,162 @@ class TddGuardTest(unittest.TestCase):
 
         self.assertEqual("", result.stdout)
 
+    def test_finds_test_in_subdirectory(self) -> None:
+        """A: 이름만 맞으면 하위 디렉터리에 있어도 테스트로 인정한다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            source = project / "src" / "services" / "widget.py"
+            source.parent.mkdir(parents=True)
+            source.write_text("def widget():\n    return 1\n")
+            test_dir = project / "tests" / "unit" / "services"
+            test_dir.mkdir(parents=True)
+            (test_dir / "test_widget.py").write_text("def test_widget():\n    pass\n")
+
+            payload = {"tool_input": {"file_path": str(source)}}
+            result = subprocess.run(
+                [sys.executable, str(ROOT / ".agent-harness/hooks/tdd_guard.py")],
+                cwd=project,
+                input=json.dumps(payload),
+                text=True,
+                capture_output=True,
+                check=True,
+            )
+
+        self.assertEqual("", result.stdout)
+
+    def test_respects_paths_tests_config(self) -> None:
+        """B: paths.tests 가 설정된 경우 해당 경로 안에서만 탐색한다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            source = project / "widget.py"
+            source.write_text("def widget():\n    return 1\n")
+            # 테스트 파일이 config에 없는 경로에 있음
+            other_dir = project / "other"
+            other_dir.mkdir()
+            (other_dir / "test_widget.py").write_text("def test_widget():\n    pass\n")
+            # config는 tests/ 만 지정
+            harness_dir = project / ".agent-harness"
+            harness_dir.mkdir()
+            config = {
+                "paths": {"tests": ["tests/"]},
+                "policy": {"tdd_guard": "warning"},
+            }
+            (harness_dir / "harness.config.json").write_text(json.dumps(config))
+
+            payload = {"tool_input": {"file_path": str(source)}}
+            result = subprocess.run(
+                [sys.executable, str(ROOT / ".agent-harness/hooks/tdd_guard.py")],
+                cwd=project,
+                input=json.dumps(payload),
+                text=True,
+                capture_output=True,
+                check=True,
+            )
+
+        # tests/ 안에 없으므로 경고 발생
+        self.assertIn("[TDD warning]", result.stdout)
+
+    def test_strict_tdd_guard_blocks_on_missing_test(self) -> None:
+        """policy.tdd_guard=strict 이면 테스트 없을 때 exit code 2로 차단한다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            source = project / "widget.py"
+            source.write_text("def widget():\n    return 1\n")
+            harness_dir = project / ".agent-harness"
+            harness_dir.mkdir()
+            config = {"policy": {"tdd_guard": "strict"}}
+            (harness_dir / "harness.config.json").write_text(json.dumps(config))
+
+            payload = {"tool_input": {"file_path": str(source)}}
+            result = subprocess.run(
+                [sys.executable, str(ROOT / ".agent-harness/hooks/tdd_guard.py")],
+                cwd=project,
+                input=json.dumps(payload),
+                text=True,
+                capture_output=True,
+            )
+
+        self.assertEqual(2, result.returncode)
+
+
+class RunTestsTest(unittest.TestCase):
+    def _run_hook(self, project: Path, file_path: str | None = None) -> subprocess.CompletedProcess:
+        payload = {"tool_input": {"file_path": file_path or str(project / "dummy.py")}}
+        return subprocess.run(
+            [sys.executable, str(ROOT / ".agent-harness/hooks/run_tests.py")],
+            cwd=project,
+            input=json.dumps(payload),
+            text=True,
+            capture_output=True,
+        )
+
+    def test_uses_config_test_command_when_set(self) -> None:
+        """commands.test 가 설정된 경우 해당 명령이 실제로 실행된다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            harness_dir = project / ".agent-harness"
+            harness_dir.mkdir()
+            # -c 대신 스크립트 파일로 quoting 문제 회피
+            script = project / "custom_test.py"
+            script.write_text("print('custom test ran')\n")
+            config = {
+                "commands": {"test": f"{sys.executable} custom_test.py"},
+                "policy": {"test_failure": "warning"},
+            }
+            (harness_dir / "harness.config.json").write_text(json.dumps(config))
+
+            result = self._run_hook(project)
+
+        self.assertEqual(0, result.returncode)
+        self.assertIn("custom test ran", result.stdout)
+
+    def test_strict_test_failure_blocks(self) -> None:
+        """policy.test_failure=strict 이면 테스트 실패 시 exit code 2로 차단한다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            harness_dir = project / ".agent-harness"
+            harness_dir.mkdir()
+            script = project / "fail_test.py"
+            script.write_text("raise SystemExit(1)\n")
+            config = {
+                "commands": {"test": f"{sys.executable} fail_test.py"},
+                "policy": {"test_failure": "strict"},
+            }
+            (harness_dir / "harness.config.json").write_text(json.dumps(config))
+
+            result = self._run_hook(project)
+
+        self.assertEqual(2, result.returncode)
+
+    def test_config_command_not_found_treated_as_failure(self) -> None:
+        """commands.test 에 없는 실행 파일을 지정하면 실패(127)로 처리하고, strict 시 exit 2로 차단한다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            harness_dir = project / ".agent-harness"
+            harness_dir.mkdir()
+            config = {
+                "commands": {"test": "missing-test-runner-xyz --check"},
+                "policy": {"test_failure": "strict"},
+            }
+            (harness_dir / "harness.config.json").write_text(json.dumps(config))
+
+            result = self._run_hook(project)
+
+        self.assertEqual(2, result.returncode)
+
+    def test_runs_all_detected_runners(self) -> None:
+        """Python 테스트와 package.json 이 모두 있으면 둘 다 감지한다 (실행은 성공 기준)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            # Python 테스트 파일
+            (project / "test_dummy.py").write_text("def test_ok():\n    pass\n")
+            # package.json (test 스크립트 없음 → npm --if-present 는 0 반환)
+            (project / "package.json").write_text(json.dumps({"name": "dummy"}))
+
+            result = self._run_hook(project)
+
+        self.assertEqual(0, result.returncode)
+
 
 if __name__ == "__main__":
     unittest.main()

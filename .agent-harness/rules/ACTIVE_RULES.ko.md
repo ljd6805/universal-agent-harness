@@ -5,6 +5,7 @@
 `HARNESS_GUIDE.ko.md`가 "왜 이렇게 설계했는가"를 설명하는 문서라면, 이 문서는 "지금 무엇이 켜져 있는가"만 빠르게 보여주는 것이 목적입니다.
 
 > 이 문서의 YAML 블록 중 다음 항목은 `.claude/settings.json`과 `tests/test_harness.py`(`ActiveRulesDocTest`)로 **자동 동기화 검증**됩니다.
+>
 > - `permissions.allow`의 rule 문자열
 > - `.agent-harness/hooks/*.py` hook script 경로
 > - `Stop` hook의 존재 여부
@@ -62,7 +63,7 @@ workflow_rules:
     source: ".agent-harness/rules/AGENT_GUIDE.md#2-프로젝트별-지침을-확인한다"
   - id: tdd-default
     summary: "프로덕션 코드는 실패하는 테스트 작성 -> 구현을 기본값으로 한다 (문서/하네스 설정/명시적 스캐폴딩은 예외)"
-    enforced_by: "tdd_guard.py 훅 (경고만 출력, 차단 아님)"
+    enforced_by: "tdd_guard.py 훅 — policy.tdd_guard=warning(기본)이면 경고만, strict이면 exit 2로 차단. 테스트 탐색은 이름 기반 전체 탐색(A); paths.tests 설정 시 해당 경로만 탐색(B)."
     source: ".agent-harness/rules/AGENT_GUIDE.md#3-기본값은-tdd다"
   - id: parallelization-judgement
     summary: "독립적인 파일/모듈/원인일 때만 병렬화하고, 강하게 결합된 작업은 단일 흐름으로 진행한다"
@@ -70,7 +71,7 @@ workflow_rules:
     source: ".agent-harness/rules/AGENT_GUIDE.md#4-병렬화-가능성을-판단한다"
   - id: verify-before-done
     summary: "완료 보고 전 관련 테스트/검사를 실행하고, 불가능하면 이유와 다음 실행 명령을 명시한다"
-    enforced_by: "run_tests.py 훅 + 자연어 지침"
+    enforced_by: "run_tests.py 훅 — commands.test 설정 시 해당 명령 사용, 없으면 Python/JS 모두 자동 감지하여 실행. policy.test_failure=warning(기본)이면 경고만, strict이면 exit 2로 차단."
     source: ".agent-harness/rules/AGENT_GUIDE.md#5-완료-전-검증한다"
   - id: maintainable-harness-structure
     summary: "공통 규칙/훅/adapter/프로젝트 지침을 정해진 위치에 두고, 긴 인라인 셸 명령보다 작고 검토 가능한 스크립트를 선호한다"
