@@ -30,6 +30,23 @@ class HarnessStructureTest(unittest.TestCase):
         config = json.loads((ROOT / "opencode.json").read_text(encoding="utf-8"))
         self.assertIn(".agent-harness/rules/AGENT_GUIDE.md", config["instructions"])
 
+    def test_opencode_config_matches_shared_adapter(self) -> None:
+        path = ROOT / "opencode.json"
+        self.assertFalse(path.is_symlink())
+        adapter_path = ROOT / ".agent-harness/adapters/opencode/opencode.json"
+        self.assertEqual(
+            json.loads(path.read_text(encoding="utf-8")),
+            json.loads(adapter_path.read_text(encoding="utf-8")),
+        )
+
+    def test_opencode_adapter_is_valid_json(self) -> None:
+        config = json.loads(
+            (ROOT / ".agent-harness/adapters/opencode/opencode.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertIn("instructions", config)
+
     def test_claude_settings_matches_shared_adapter(self) -> None:
         path = ROOT / ".claude/settings.json"
         self.assertFalse(path.is_symlink())
