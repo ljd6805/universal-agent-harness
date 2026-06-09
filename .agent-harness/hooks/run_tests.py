@@ -22,6 +22,16 @@ def changed_file() -> Path | None:
     return Path(value).expanduser().resolve()
 
 
+def load_config(project: Path) -> dict:
+    config_path = project / ".agent-harness" / "harness.config.json"
+    if config_path.is_file():
+        try:
+            return json.loads(config_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            pass
+    return {}
+
+
 def has_python_tests(project: Path) -> bool:
     ignored = {".git", ".venv", "venv", "node_modules", "__pycache__"}
     for path in project.rglob("*.py"):
@@ -33,11 +43,22 @@ def has_python_tests(project: Path) -> bool:
     return False
 
 
-def run(command: list[str], cwd: Path) -> None:
+def has_js_tests(project: Path) -> bool:
+    ignored = {".git", "node_modules"}
+    for path in project.rglob("*"):
+        if any(part in ignored for part in path.parts):
+            continue
+        if ".test." in path.name or ".spec." in path.name:
+            return True
+    return False
+
+
+def run(command: list[str], cwd: Path) -> int:
     try:
-        subprocess.run(command, cwd=cwd, check=False)
+        result = subprocess.run(command, cwd=cwd, check=False)
+        return result.returncode
     except FileNotFoundError:
-        return
+        return 0
 
 
 def main() -> int:
@@ -49,11 +70,33 @@ def main() -> int:
         except ValueError:
             return 0
 
-    if (project / "package.json").is_file():
-        run(["npm", "test", "--if-present"], project)
-    elif has_python_tests(project):
-        run([sys.executable, "-m", "pytest"], project)
+    config = load_config(project)
+    policy = config.get("policy", {})
+    is_strict = policy.get("test_failure", "warning") == "strict"
 
+    # config에 test 명령이 있으면 그것만 실행
+    config_test_cmd = config.get("commands", {}).get("test", "").strip()
+    if config_test_cmd:
+        rc = run(config_test_cmd.split(), project)
+        if rc != 0 and is_strict:
+            return 2
+        return 0
+
+    # 언어별 테스트 러너를 모두 감지하여 순서대로 실행
+    failed = False
+
+    if (project / "package.json").is_file():
+        rc = run(["npm", "test", "--if-present"], project)
+        if rc != 0:
+            failed = True
+
+    if has_python_tests(project):
+        rc = run([sys.executable, "-m", "pytest"], project)
+        if rc != 0:
+            failed = True
+
+    if failed and is_strict:
+        return 2
     return 0
 
 
