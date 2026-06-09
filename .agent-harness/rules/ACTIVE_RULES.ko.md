@@ -89,7 +89,7 @@ workflow_rules:
 
 ### Hooks
 
-`Write|Edit|MultiEdit` 직후에 포맷팅 → 테스트 실행 → TDD 점검이 순서대로 실행됩니다. 세 훅 모두 **차단(block)이 아니라 안내/경고** 목적입니다 — 즉, 세션을 멈추지 않고 메시지만 보여줍니다. `Stop` 훅은 별도 스크립트 없이 고정 메시지를 출력하는 가장 단순한 형태입니다.
+`Write|Edit|MultiEdit` 직후에 포맷팅 → 테스트 실행 → TDD 점검이 순서대로 실행됩니다. 기본 template 정책(`warning`)에서는 세 훅 모두 안내/경고 목적으로 동작합니다 — 즉, 세션을 멈추지 않고 메시지만 보여줍니다. 다만 project harness에서 `policy.tdd_guard` 또는 `policy.test_failure`를 `strict`로 설정하면 `tdd_guard.py`와 `run_tests.py`는 exit code 2로 작업을 차단할 수 있습니다. `Stop` 훅은 별도 스크립트 없이 고정 메시지를 출력하는 가장 단순한 형태입니다.
 
 ### Workflow rules
 
